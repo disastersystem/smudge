@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>smudge.js</title>
+        <link rel="stylesheet" href="css/master.css" media="screen" title="core styles" charset="utf-8">
+    </head>
+    <body>
+
+        <div id="main-content-wrapper">
+
+            <div class="canvas-container" data-image-url="img/river.jpg" oncontextmenu="return false;">
+                <!-- image canvas gets appended here -->
+            </div>
+
+        </div>
+
+        <script src="js/libs/jquery.js"></script>
+        <script src="js/libs/color-thief.js"></script>
+        <script src="js/Color.js"></script>
+        <script src="js/smudge.js"></script>
+        <script>
+            $('.canvas-container').smudge({
+                // fillColor: 'rgba(255, 255, 255, 0.4)',
+                // borderColor: '#456'
+            });
+        </script>
+
+    </body>
+</html>
