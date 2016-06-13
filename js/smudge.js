@@ -38,7 +38,7 @@
         setCanvasImage();
 
         /* set the color of the drawing pen and fill based in the colors of the image */
-        setPenColor();
+        // setPenColor();
 
         /* we're all set, allow the user to start marking
          * by setting up the drawing events */
@@ -231,7 +231,7 @@
                 drawingCtx.closePath();
             });
 
-            /* alert the amout of shapes the users double click is inside */
+            /* alert the amount of shapes the users double click is inside */
             var plural = (numShapes == 1) ? '' : 's';
             alert('Inside ' + numShapes + ' shape' +  plural);
         }
@@ -324,8 +324,8 @@
                 var color1 = Color().getComplementary(rgb1);
                 var color2 = Color().getComplementary(rgb2);
 
-                settings.fillColor = 'rgba(' + color1.r + ', ' + color1.g + ', ' + color1.b + ', 0.5)';
-                settings.borderColor = 'rgb(' + color2.r + ', ' + color2.g + ', ' + color2.b + ')';
+                settings.fillColor = 'rgba(' + color2.r + ', ' + color2.g + ', ' + color2.b + ', 0.5)';
+                settings.borderColor = 'rgb(' + color1.r + ', ' + color1.g + ', ' + color1.b + ')';
             });
         }
 

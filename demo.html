@@ -9,11 +9,13 @@
     <body>
 
         <div id="main-content-wrapper">
-
-            <div class="canvas-container" data-image-url="img/river.jpg" oncontextmenu="return false;">
+            <div class="image-container" data-image-url="img/river.jpg" oncontextmenu="return false;">
                 <!-- image canvas gets appended here -->
             </div>
 
+            <div class="image-container" data-image-url="img/shop.jpg" oncontextmenu="return false;">
+                <!-- image canvas gets appended here -->
+            </div>
         </div>
 
         <script src="js/libs/jquery.js"></script>
@@ -21,7 +23,7 @@
         <script src="js/Color.js"></script>
         <script src="js/smudge.js"></script>
         <script>
-            $('.canvas-container').smudge({
+            $('.image-container').smudge({
                 // fillColor: 'rgba(255, 255, 255, 0.4)',
                 // borderColor: '#456'
             });
