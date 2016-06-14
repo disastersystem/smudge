@@ -37,15 +37,11 @@
         /* set the canvas size to that of the provided image */
         setCanvasImage();
 
-        /* set the color of the drawing pen and fill based in the colors of the image */
-        // setPenColor();
-
         /* we're all set, allow the user to start marking
          * by setting up the drawing events */
         drawingCanvas.on('mousedown', startDraw);
         drawingCanvas.on('mouseup', stopDraw);
         drawingCanvas.on('dblclick', isPointInShape);
-
 
         /**
          * Figure out the size of the image, so we can set the canvases to the same size.
@@ -211,11 +207,11 @@
             var mouseX  = e.offsetX;
             var mouseY  = e.offsetY;
             /* number of shapes containing the coordinate */
-            var numShapes = 0;
+            var matchingShapes = [];
 
             drawingCtx.lineWidth = 2;
 
-            savedShapes.forEach(function(shape) {
+            savedShapes.forEach(function(shape, shapeIndex) {
                 drawingCtx.beginPath();
                 /* start the shape at the first coordinate in the array */
                 drawingCtx.moveTo(shape[0].x, shape[0].y);
@@ -225,15 +221,13 @@
                 });
 
                 if (drawingCtx.isPointInPath(mouseX, mouseY)) {
-                    numShapes++;
+                    /*  */
+                    matchingShapes.push(shapeIndex);
                 }
 
                 drawingCtx.closePath();
             });
 
-            /* alert the amount of shapes the users double click is inside */
-            var plural = (numShapes == 1) ? '' : 's';
-            alert('Inside ' + numShapes + ' shape' +  plural);
         }
 
         /**
@@ -281,52 +275,6 @@
 
             draw();
             drawSavedShapes();
-        }
-
-        /**
-         * Uses a plugin called color-thief to get the main
-         * colors of the image.
-         * @param {callback function}
-         * @callback callback
-         */
-        function getImageColors(callback) {
-            var image = new Image();
-            image.src = settings.imageUrl;
-
-            image.onload = function() {
-                var colorThief = new ColorThief();
-                var palette = colorThief.getPalette(image, 2);
-
-                callback(palette);
-            };
-        }
-
-        /**
-         * Set the border color and fill color based on the
-         * colors found by the color-thief plugin.
-         *
-         * @return void
-         */
-        function setPenColor() {
-            getImageColors(function(imageColors) {
-                var rgb1 = {
-                    'r': imageColors[0][0],
-                    'g': imageColors[0][1],
-                    'b': imageColors[0][2]
-                };
-
-                var rgb2 = {
-                    'r': imageColors[1][0],
-                    'g': imageColors[1][1],
-                    'b': imageColors[1][2]
-                };
-
-                var color1 = Color().getComplementary(rgb1);
-                var color2 = Color().getComplementary(rgb2);
-
-                settings.fillColor = 'rgba(' + color2.r + ', ' + color2.g + ', ' + color2.b + ', 0.5)';
-                settings.borderColor = 'rgb(' + color1.r + ', ' + color1.g + ', ' + color1.b + ')';
-            });
         }
 
     } /* end of initSmudge function */
