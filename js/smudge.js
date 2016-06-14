@@ -228,6 +228,14 @@
                 drawingCtx.closePath();
             });
 
+            var annotation = new AnnotationModal({
+                content: '<input type="text" placeholder="What do you see?" class="annotation-input">',
+                maxWidth: 400,
+                closeButton: false,
+                shape: matchingShapes.pop()
+            });
+
+            annotation.open();
         }
 
         /**
