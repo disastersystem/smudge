@@ -1,4 +1,4 @@
-# smudge-js
+# smudge.js
 jQuery plugin for drawing / marking interesting spots on images.
 
 ![Image with drawn marks](img/documentation/river.jpg)
