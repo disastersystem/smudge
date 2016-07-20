@@ -1,26 +1,26 @@
 (function() {
-    // 'use strict';
-    
+
     /**
      * Define our constructor.
      * The 'this' keyword is pointing to the window object, which means we're
      * attaching our constructor to the global scope.
      */
     this.AnnotationModal = function() {
-        /* Create global element references */
-        this.closeButton = null;
-        this.modal = null;
-        this.overlay = null;
-        this.transitionEnd = transitionSelect(); /* Determine proper prefix */
+        'use strict';
 
-        // Define option defaults
+        /* Create global element references */
+        this.modal = null;
+        this.annotationForm = null;
+        this.annotationInput = null;
+        this.overlay = null;
+
+        /* Define option defaults */
         var defaults = {
             className: 'fade-and-drop',
-            closeButton: true,
-            content: "",
-            maxWidth: 600,
-            minWidth: 280,
-            overlay: true
+            content: '',
+            inputValue: '',
+            maxWidth: 400,
+            minWidth: 280
         }
 
         /**
@@ -28,16 +28,16 @@
          * an array of everything passed to it via arguments. Because we are only expecting
          * one argument, an object containing plugin settings, we check to make sure arguments[0]
          * exists, and that it is indeed an object.
+         * -------------------
+         * create options by extending defaults with the passed in arguments
          */
-
-        // create options by extending defaults with the passed in arugments
         if (arguments[0] && typeof arguments[0] === "object") {
-            // merge the two objects using a privately scoped utility method called extendDefaults
+            /* merge the two objects using a privately scoped utility method called extendDefaults */
             this.options = extendDefaults(defaults, arguments[0]);
         }
     }
 
-    /*# utility method to extend defaults with user options */
+    /* Extend defaults with user options. */
     function extendDefaults(source, properties) {
         var property;
         for (property in properties) {
@@ -48,129 +48,169 @@
         return source;
     }
 
-    /* public */
-    AnnotationModal.prototype.open = function() {
 
-        /* Build out our Modal.
-         * Call our buildOut method using the call method, similarly to the way we
+    /**
+     * Open the modal.
+     */
+    AnnotationModal.prototype.open = function() {
+        /*
+         * Build out our Modal.
+         * Call our createMarkup method using the call method, similarly to the way we
          * did in our event binding with bind. We are simply passing the proper value of this to the method.
          */
-        buildOut.call(this);
+        createMarkup.call(this);
 
         /* Initialize our event listeners */
         initializeEvents.call(this);
 
-        /**
+        /*
          * After adding elements to the DOM, use getComputedStyle
          * to force the browser to recalc and recognize the elements
          * that we just added. This is so that CSS animation has a start point
          */
         window.getComputedStyle(this.modal).height;
 
-        /**
-         * Add our open class and check if the modal is taller than the window
-         * If so, our anchored class is also applied
+        /*
+         * Add our open class and check if the modal is taller than the window.
+         * If so, our anchored class is also applied.
          */
         this.modal.className =
             this.modal.className + (this.modal.offsetHeight > window.innerHeight ?
-                " scotch-open scotch-anchored"
-                :
-                " scotch-open");
+                " annotation-modal-open annotation-modal-anchored" : " annotation-modal-open");
 
-        this.overlay.className = this.overlay.className + " scotch-open";
+        this.overlay.className = this.overlay.className + " annotation-modal-open";
     }
 
+    /**
+     * Close the modal by removing the nodes from the DOM when the CSS animation has ended.
+     */
+    AnnotationModal.prototype.close = function(event) {
+        /* stop the form from submitting */
+        event.preventDefault();
 
-    AnnotationModal.prototype.close = function() {
-        /* Store the value of this */
+        /* Store the current value of this */
         var self = this;
 
+        removeEvents.call(this);
+
         /* Remove the open class name */
-        this.modal.className = this.modal.className.replace(" scotch-open", "");
-        this.overlay.className = this.overlay.className.replace(" scotch-open", "");
+        this.modal.className = this.modal.className.replace(" annotation-modal-open", "");
+        this.overlay.className = this.overlay.className.replace(" annotation-modal-open", "");
 
         /*
          * Listen for CSS transitionend event and then
          * Remove the nodes from the DOM
          */
-        this.modal.addEventListener(this.transitionEnd, function() {
+        this.modal.addEventListener('transitionend', function() {
             self.modal.parentNode.removeChild(self.modal);
         });
 
-        this.overlay.addEventListener(this.transitionEnd, function() {
-            if (self.overlay.parentNode) self.overlay.parentNode.removeChild(self.overlay);
+        this.overlay.addEventListener('transitionend', function() {
+            if (self.overlay.parentNode) {
+                self.overlay.parentNode.removeChild(self.overlay);
+            }
         });
+
+        /* trigger the  */
+        if (this.options.hasOwnProperty('onClose')) {
+            this.options.onClose();
+        }
     }
 
-    function buildOut() {
-        var content, contentHolder, input, docFrag;
+    /**
+     * Public method for getting the value of the input text field.
+     */
+    AnnotationModal.prototype.getInputValue = function() {
+        return this.annotationInput.value;
+    }
 
-        /* If content is an HTML string, append the HTML string.
-           If content is a domNode, append its content. */
-        if (typeof this.options.content === "string") {
-            content = this.options.content;
-        } else {
-            content = this.options.content.innerHTML;
-        }
-
-        console.log(this.options.shape);
+    /**
+     * Build the HTML for the modal.
+     */
+    function createMarkup() {
 
         /* Create a DocumentFragment to build with */
-        docFrag = document.createDocumentFragment();
+        var docFrag = document.createDocumentFragment();
 
         /* Create modal element */
         this.modal = document.createElement("div");
-        this.modal.className = "scotch-modal " + this.options.className;
+        this.modal.className = "annotation-modal " + this.options.className;
         this.modal.style.minWidth = this.options.minWidth + "px";
         this.modal.style.maxWidth = this.options.maxWidth + "px";
 
-
-        /* If overlay is true, add one */
-        if (this.options.overlay === true) {
-            this.overlay = document.createElement("div");
-            this.overlay.className = "scotch-overlay " + this.options.classname;
-            docFrag.appendChild(this.overlay);
-        }
+        /* Create overlay */
+        this.overlay = document.createElement("div");
+        this.overlay.className = "annotation-modal-overlay " + this.options.classname;
+        docFrag.appendChild(this.overlay);
 
         /* Create content area */
-        contentHolder = document.createElement("div");
-        contentHolder.className = "scotch-content";
-        contentHolder.innerHTML = content;
+        var contentHolder = document.createElement("div");
+        contentHolder.className = "annotation-modal-content";
+
+        /* Create form */
+        this.annotationForm = document.createElement("form");
+        this.annotationForm.className = 'annotation-modal-form';
+
+        /* Create form input */
+        this.annotationInput = document.createElement("input");
+        this.annotationInput.setAttribute("type", "text");
+        this.annotationInput.setAttribute("placeholder", "What do you see?");
+        this.annotationInput.value = this.options.inputValue;
+        this.annotationInput.className = 'annotation-modal-input';
+
+        // label = document.createElement('label');
+        // label.innerHTML = 'What do you see?';
+        //
+        // /* Append label to form */
+        // this.annotationForm.appendChild(label);
+
+        /* Append input to form */
+        this.annotationForm.appendChild(this.annotationInput);
+
+        /* Append form to contet area */
+        contentHolder.appendChild(this.annotationForm);
 
         /* Append content area to modal */
         this.modal.appendChild(contentHolder);
-
 
         /* Append modal to DocumentFragment */
         docFrag.appendChild(this.modal);
 
         /* Append DocumentFragment to body */
         document.body.appendChild(docFrag);
+
+        /* automatically put mouse focus inside the input field */
+        this.annotationInput.focus();
     }
 
 
-    function initializeEvents() {
-        if (this.closeButton) {
-            /**
-             * Notice we dont just call close, but we use the bind method and
-             * pass our reference to this, which references our Modal object.
-             * This makes sure that our method has the right context when using the this keyword.
+    function initializeEvents(event) {
+        this.overlay.addEventListener(
+            /*
+             * Call close by using the bind method, which makes sure
+             * this will reference the same thing inside our close method,
+             * which is our modal object.
              */
-            this.closeButton.addEventListener('click', this.close.bind(this));
-        }
+            'click', this.close.bind(this)
+        );
 
-        if (this.overlay) {
-            this.overlay.addEventListener('click', this.close.bind(this));
-        }
+        this.annotationForm.addEventListener(
+            'submit', this.close.bind(this)
+        );
     }
 
-    /* Utility method to determine which transistionend event is supported */
-    function transitionSelect() {
-        var el = document.createElement("div");
-        if (el.style.WebkitTransition) return "webkitTransitionEnd";
-        if (el.style.OTransition) return "oTransitionEnd";
-        return 'transitionend';
-    }
+    /**
+     * Removes event listeners to avoid duplication when the modal
+     * is opened and closed multiple times.
+     */
+    function removeEvents(event) {
+        this.overlay.removeEventListener(
+            'click', this.close.bind(this)
+        );
 
+        this.annotationForm.removeEventListener(
+            'submit', this.close.bind(this)
+        );
+    }
 
 }());

@@ -1,5 +1,4 @@
-/* Modal Base CSS */
-.scotch-overlay {
+.annotation-modal-overlay {
     position: fixed;
     z-index: 9998;
     top: 0;
@@ -19,8 +18,8 @@
     background: rgba(0, 0, 0, .6);
 }
 
-.scotch-modal {
-    position: absolute;
+.annotation-modal {
+    position: fixed;
     z-index: 9999;
     top: 0;
     left: 50%;
@@ -30,11 +29,11 @@
     width: 94%;
     padding: 24px 20px;
 
-    /*-webkit-transition: 1ms opacity ease;
+    -webkit-transition: 1ms opacity ease;
        -moz-transition: 1ms opacity ease;
         -ms-transition: 1ms opacity ease;
          -o-transition: 1ms opacity ease;
-            transition: 1ms opacity ease;*/
+            transition: 1ms opacity ease;
 
     -webkit-transform: translate(-50%, -50%);
        -moz-transform: translate(-50%, -50%);
@@ -42,7 +41,7 @@
          -o-transform: translate(-50%, -50%);
             transform: translate(-50%, -50%);
 
-    /* dirty fix for blurry element when using transform translate in chrome */
+    /* gross fix for blurry element when using transform translate in chrome */
     -webkit-filter: blur(0.000001px);
     -webkit-font-smoothing: antialiased;
 
@@ -50,7 +49,28 @@
     background: #fff;
 }
 
-.scotch-modal.scotch-open.scotch-anchored {
+.annotation-modal-input {
+    box-sizing: border-box;
+    -webkit-box-sizing:border-box;
+    -moz-box-sizing: border-box;
+
+    margin: 0;
+    padding: 10px;
+    width: 100%;
+
+    border: 1px solid #444;
+
+    font-size: 16px;
+    font-family: Helvetica;
+}
+
+.annotation-modal-input::-webkit-input-placeholder { color: #333; font-style: italic; }
+.annotation-modal-input:-moz-placeholder { color: #333; font-style: italic; opacity: 1; }
+.annotation-modal-input::-moz-placeholder { color: #333; font-style: italic; opacity: 1; }
+.annotation-modal-input:-ms-input-placeholder { color: #333; font-style: italic; }
+.annotation-modal-input::placeholder { color: #333; font-style: italic; }
+
+.annotation-modal.annotation-modal-open.annotation-modal-anchored {
     top: 20px;
 
     -webkit-transform: translate(-50%, 0);
@@ -60,58 +80,35 @@
             transform: translate(-50%, 0);
 
 
-    /* dirty fix for blurry element when using transform translate in chrome */
+    /* gross fix for blurry element when using transform translate in chrome */
     -webkit-filter: blur(0.000001px);
     -webkit-font-smoothing: antialiased;
 }
 
-.scotch-modal.scotch-open {
+.annotation-modal.annotation-modal-open {
     opacity: 1;
 }
 
-.scotch-overlay.scotch-open {
+.annotation-modal-overlay.annotation-modal-open {
     opacity: 1;
 }
 
-/* Close Button */
-.scotch-close {
-    font-family: Helvetica, Arial, sans-serif;
-    font-size: 24px;
-    font-weight: 700;
-    line-height: 12px;
+/*----------------------
+    Default Animation
+-----------------------*/
 
-    position: absolute;
-    top: 5px;
-    right: 5px;
-
-    padding: 5px 7px 7px;
-
-    cursor: pointer;
-
-    color: #fff;
-    border: 0;
-    outline: none;
-    background: #e74c3c;
-}
-
-.scotch-close:hover {
-    background: #c0392b;
-}
-
-/* Default Animation */
-
-.scotch-overlay.fade-and-drop {
+.annotation-modal-overlay.fade-and-drop {
     display: block;
     opacity: 0;
 }
 
-.scotch-modal.fade-and-drop {
+.annotation-modal.fade-and-drop {
     top: -300%;
     opacity: 1;
     display: block;
 }
 
-.scotch-modal.fade-and-drop.scotch-open {
+.annotation-modal.fade-and-drop.annotation-modal-open {
     top: 100px;
 
     -webkit-transition: 200ms top 200ms ease;
@@ -121,7 +118,7 @@
             transition: 200ms top 200ms ease;
 }
 
-.scotch-modal.fade-and-drop.scotch-open.scotch-anchored {
+.annotation-modal.fade-and-drop.annotation-modal-open.annotation-modal-anchored {
     -webkit-transition: 500ms top 500ms ease;
        -moz-transition: 500ms top 500ms ease;
         -ms-transition: 500ms top 500ms ease;
@@ -129,7 +126,7 @@
             transition: 500ms top 500ms ease;
 }
 
-.scotch-overlay.fade-and-drop.scotch-open {
+.annotation-modal-overlay.fade-and-drop.annotation-modal-open {
     top: 0;
 
     -webkit-transition: 200ms opacity ease;
@@ -141,7 +138,7 @@
     opacity: 1;
 }
 
-.scotch-modal.fade-and-drop {
+.annotation-modal.fade-and-drop {
     -webkit-transition: 500ms top ease;
        -moz-transition: 500ms top ease;
         -ms-transition: 500ms top ease;
@@ -149,7 +146,7 @@
             transition: 500ms top ease;
 }
 
-.scotch-overlay.fade-and-drop {
+.annotation-modal-overlay.fade-and-drop {
     -webkit-transition: 500ms opacity 500ms ease;
        -moz-transition: 500ms opacity 500ms ease;
         -ms-transition: 500ms opacity 500ms ease;

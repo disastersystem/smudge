@@ -12,20 +12,20 @@
 
         /* establish our default settings, override if any provided */
         var settings = $.extend({
-            imageUrl: $(this).attr('data-image-url'),
+            imageUrl: this.getAttribute('data-image-url'),
             borderColor: 'rgb(255, 255, 255)',
             fillColor: 'rgba(0, 0, 0, 0.3)'
         }, options);
 
         /* create the canvas where the drawing will take place */
-        var drawingCanvas = $('<canvas>');
-        var drawingCtx = drawingCanvas[0].getContext('2d');
+        var drawingCanvas = document.createElement('canvas');
+        var drawingCtx = drawingCanvas.getContext('2d');
 
         /* put our savedShapes on another canvas,
          * so we don't have to redraw them every time something changes
          * on the main canvas */
-        var savedCanvas = $('<canvas>');
-		var savedCtx = savedCanvas[0].getContext('2d');
+        var savedCanvas = document.createElement('canvas');
+		var savedCtx = savedCanvas.getContext('2d');
 
         var canvasContainer = element;
 
@@ -33,15 +33,17 @@
         var activeShape = [];
         /* here we will store the coordinates of the finished shapes */
         var savedShapes = [];
+        /* here we will store any annotations the user adds to the finished shapes */
+        var annotations = [];
 
         /* set the canvas size to that of the provided image */
         setCanvasImage();
 
         /* we're all set, allow the user to start marking
          * by setting up the drawing events */
-        drawingCanvas.on('mousedown', startDraw);
-        drawingCanvas.on('mouseup', stopDraw);
-        drawingCanvas.on('dblclick', isPointInShape);
+        drawingCanvas.addEventListener('mousedown', startDraw);
+        drawingCanvas.addEventListener('mouseup', stopDraw);
+        drawingCanvas.addEventListener('dblclick', isPointInShape);
 
         /**
          * Figure out the size of the image, so we can set the canvases to the same size.
@@ -51,35 +53,33 @@
             image.src = settings.imageUrl;
 
             image.onload = function() {
-                /* make container the same size as the image */
-                $(canvasContainer).css({
-                    height: image.height,
-                    width: image.width,
-                    /* make sure our absolute positioned canvases
-                     * are placed relative to the container */
-                    position: 'relative'
-                });
+                /* make the container the same size as the image */
+                canvasContainer.style.height = this.height + 'px';
+                canvasContainer.style.width = this.width + 'px';
+                /* make sure our absolute positioned canvases
+                 * are placed relative to the container */
+                canvasContainer.style.position = 'relative';
 
                 /* make canvases the same size as the image */
-                drawingCanvas.attr('height', image.height).attr('width', image.width);
-                savedCanvas.attr('height', image.height).attr('width', image.width);
+                drawingCanvas.setAttribute('height', image.height);
+                drawingCanvas.setAttribute('width', image.width);
 
-                drawingCanvas.css({
-                    position: "absolute",
-                    top: 0,
-                    right: 0
-                });
+                savedCanvas.setAttribute('height', image.height);
+                savedCanvas.setAttribute('width', image.width);
 
-                savedCanvas.css({
-                    background: 'url(' + image.src + ')',
-                    position: "absolute",
-                    top: 0,
-                    right: 0
-                });
+                /* position the canvases on the page with CSS */
+                drawingCanvas.style.position = 'absolute';
+                drawingCanvas.style.top = 0;
+                drawingCanvas.style.right = 0;
+
+                savedCanvas.style.background = 'url(' + image.src + ')';
+                savedCanvas.style.position = 'absolute';
+                savedCanvas.style.top = 0;
+                savedCanvas.style.right = 0;
 
                 /* append the resized canvases to the DOM */
-                $(canvasContainer).append(savedCanvas);
-                $(canvasContainer).append(drawingCanvas);
+                canvasContainer.appendChild(savedCanvas);
+                canvasContainer.appendChild(drawingCanvas);
             };
         }
 
@@ -87,14 +87,14 @@
          * Start the mousemove event so we can draw.
          */
         function startDraw() {
-            $(this).on('mousemove', checkDistance);
+            this.addEventListener('mousemove', checkDistance);
         }
 
         /**
          * Remove the mousemove event when we're not drawing.
          */
         function stopDraw(e) {
-            $(this).off('mousemove');
+            this.removeEventListener('mousemove', checkDistance);
             /* we're done drawing, save the shape */
             saveShape(e);
         }
@@ -180,10 +180,10 @@
 
                 savedCtx.beginPath();
                 /* start drawing the shape from the first coordinate in the array */
-                savedCtx.moveTo(shape[0].x, shape[0].y);
+                savedCtx.moveTo(shape.coords[0].x, shape.coords[0].y);
 
                 /* go through the array in in sequential order, drawing a line between each point */
-                shape.forEach(function(point) {
+                shape.coords.forEach(function(point) {
                     savedCtx.lineTo(point.x, point.y);
                 });
 
@@ -206,36 +206,91 @@
             /* x and y coordinates of the double click event */
             var mouseX  = e.offsetX;
             var mouseY  = e.offsetY;
-            /* number of shapes containing the coordinate */
-            var matchingShapes = [];
+            /* the newest shape containing the coordinate */
+            var selectedShape = {};
 
             drawingCtx.lineWidth = 2;
 
-            savedShapes.forEach(function(shape, shapeIndex) {
+            savedShapes.forEach(function(shape) {
                 drawingCtx.beginPath();
                 /* start the shape at the first coordinate in the array */
-                drawingCtx.moveTo(shape[0].x, shape[0].y);
+                drawingCtx.moveTo(shape.coords[0].x, shape.coords[0].y);
 
-                shape.forEach(function(point) {
+                shape.coords.forEach(function(point) {
                     drawingCtx.lineTo(point.x, point.y);
                 });
 
+                /* is the mouse coordinate inside the shape last drawn in the canvas context */
                 if (drawingCtx.isPointInPath(mouseX, mouseY)) {
                     /*  */
-                    matchingShapes.push(shapeIndex);
+                    selectedShape.id = shape.id;
+                    selectedShape.text = (shape.hasOwnProperty('annotation')) ? shape.annotation : '';
                 }
 
                 drawingCtx.closePath();
             });
 
-            var annotation = new AnnotationModal({
-                content: '<input type="text" placeholder="What do you see?" class="annotation-input">',
-                maxWidth: 400,
-                closeButton: false,
-                shape: matchingShapes.pop()
+            /* display the annotation modal if the user-click was inside a shape */
+            if (selectedShape.hasOwnProperty('id')) {
+                openAnnotationModal(selectedShape.id, selectedShape.text);
+            }
+
+        }
+
+        /**
+         * Create and open the annotation modal.
+         *
+         * @return void
+         */
+        function openAnnotationModal(id, text) {
+
+            var inputModal = new AnnotationModal({
+                /* display the text in the input field, if the selected shape already has a annotation saved */
+                inputValue: ( (text != '') ? text : '' ),
+                /* save the annotation whenever the modal closes */
+                onClose: function(event) {
+                    saveAnnotation(
+                        id, inputModal.getInputValue()
+                    );
+                }
             });
 
-            annotation.open();
+            inputModal.open();
+        }
+
+        /**
+         * Save a annotation by adding a new property in the shapes object
+         * in the savedShapes array.
+         * If a annotation property exists but the user has now deleted
+         * the text (they submitted an empty input field),
+         * then delete the annotation property for that shape.
+         *
+         * @return void
+         */
+        function saveAnnotation(id, text) {
+
+            savedShapes.forEach(function(shape) {
+                /*  */
+                if (shape.id == id) {
+                    /* if an annotation has already been saved for this shape,
+                     * and the new text provided is empty: delete the shapes annotation property */
+                    if (shape.hasOwnProperty('annotation') && text == '') {
+                        delete shape.annotation;
+                        return;
+                    }
+
+                    /*  */
+                    if (shape.hasOwnProperty('annotation')) {
+                        shape.annotation = text;
+                        return;
+                    }
+
+                    if (text != '') {
+                        /* create an annotation property, with the provided text string, in the shape object */
+                        shape.annotation = text;
+                    }
+                }
+            });
         }
 
         /**
@@ -247,7 +302,10 @@
         function saveShape(e) {
             /* only save the shape if we have atleast 3 points */
             if (activeShape.length > 2) {
-                savedShapes.push(activeShape);
+                savedShapes.push({
+                    id: savedShapes.length + 1,
+                    coords: activeShape
+                });
             }
 
             /* remove the current shape now that it's saved */
