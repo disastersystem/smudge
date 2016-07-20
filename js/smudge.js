@@ -1,17 +1,16 @@
-(function($) {
-    'use strict';
+(function() {
 
-    $.fn.smudge = function(options) {
-        this.each(function(canvasIndex, element) {
-            /* first argument sets the context of "this" in the initSmudge function */
+    this.Smudge = function(elems, options) {
+        forEach(document.querySelectorAll(elems), function(canvasIndex, element) {
             initSmudge.apply(element, [canvasIndex, element, options]);
         });
-    };
+    }
 
     function initSmudge(canvasIndex, element, options) {
+        'use strict';
 
         /* establish our default settings, override if any provided */
-        var settings = $.extend({
+        var settings = extendDefaults({
             imageUrl: this.getAttribute('data-image-url'),
             borderColor: 'rgb(255, 255, 255)',
             fillColor: 'rgba(0, 0, 0, 0.3)'
@@ -345,4 +344,26 @@
 
     } /* end of initSmudge function */
 
-})(jQuery);
+
+
+
+    /* Extend defaults with user options. */
+    function extendDefaults(source, properties) {
+        var property;
+        for (property in properties) {
+            if (properties.hasOwnProperty(property)) {
+                source[property] = properties[property];
+            }
+        }
+        return source;
+    }
+
+    /* forEach method, could be shipped as part of an Object Literal/Module */
+    function forEach(array, callback, scope) {
+        for (var i = 0; i < array.length; i++) {
+            /* passes back stuff we need */
+            callback.call(scope, i, array[i]);
+        }
+    }
+
+})();
