@@ -25,6 +25,6 @@ Available settings.
 var smudge = new Smudge('.image-container'{
   fillColor: 'rgba(255, 255, 255, 0.4)',
   borderColor: '#934',
-  annotation: true // enable annotation of drawn shapes by opening a input modal on double click
+  annotation: true // enable annotation of drawn shapes by opening an input modal on double click
 });
 ```
