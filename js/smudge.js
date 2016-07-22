@@ -1,5 +1,9 @@
 (function() {
 
+    /**
+     * The 'this' keyword is pointing to the window object, which means we're
+     * attaching our constructor to the global scope.
+     */
     this.Smudge = function(elems, options) {
         this.shapes = [];
 
@@ -17,7 +21,8 @@
         var settings = extendDefaults({
             imageUrl: this.getAttribute('data-image-url'),
             borderColor: 'rgb(255, 255, 255)',
-            fillColor: 'rgba(0, 0, 0, 0.3)'
+            fillColor: 'rgba(0, 0, 0, 0.3)',
+            annotation: false
         }, options);
 
         /* create the canvas where the drawing will take place */
@@ -233,7 +238,9 @@
 
             /* display the annotation modal if the user-click was inside a shape */
             if (selectedShape.hasOwnProperty('id')) {
-                openAnnotationModal(selectedShape.id, selectedShape.text);
+                if (settings.annotation == true) {
+                    openAnnotationModal(selectedShape.id, selectedShape.text);
+                }
             }
 
         }
