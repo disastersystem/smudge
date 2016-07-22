@@ -1,5 +1,5 @@
 # smudge.js
-jQuery plugin for drawing / marking interesting spots on images.
+Plugin for drawing / marking interesting spots on images.
 
 ![Image with drawn marks](img/documentation/river.jpg)
 
@@ -12,5 +12,19 @@ Add the image path into the data-image-url attribute. The plugin appends the ima
 ```
 Run the plugin on all elements with a class of image-container.
 ```js
-$('.image-container').smudge();
+var smudge = new Smudge('.image-container');
+```
+
+Get the data of the shapes.
+```js
+smudge.shapes;
+```
+
+Available settings.
+```js
+var smudge = new Smudge('.image-container'{
+  fillColor: 'rgba(255, 255, 255, 0.4)',
+  borderColor: '#934',
+  annotation: true // enable annotation of drawn shapes by opening a input modal on double click
+});
 ```
