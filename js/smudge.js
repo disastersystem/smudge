@@ -5,25 +5,138 @@
      * attaching our constructor to the global scope.
      */
     this.Smudge = function(elems, options) {
+        this.activeShape = [];
         this.shapes = [];
+        this.lastModifiedCanvas = 0;
+
+        this.settings = extendDefaults({
+            borderColor: 'rgb(255, 255, 255)',
+            fillColor: 'rgba(0, 0, 0, 0.3)',
+            annotation: false,
+            placeholderText: 'What do you see?'
+        }, options);
 
         var self = this;
         forEach(document.querySelectorAll(elems), function(canvasIndex, element) {
-            initSmudge.apply(element, [canvasIndex, element, options, self]);
+            bootstrapCanvas.apply(element, [canvasIndex, element, self.settings, self]);
             self.shapes.push([]);
         });
     }
 
-    function initSmudge(canvasIndex, element, options, smudge) {
-        'use strict';
+    /**
+     * Takes the values from the activeShape array,
+     * and draws a line between each point.
+     * This function is called from the checkDistance function.
+     *
+     * @return void
+     */
+    Smudge.prototype.draw = function(ctx) {
+        /* clear the canvas each time */
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+        /* do not draw before we have atleast two points to draw a line between */
+        if (this.activeShape.length > 1) {
+            ctx.fillStyle = this.settings.fillColor;
+            ctx.strokeStyle = this.settings.borderColor;
+            ctx.lineWidth = 2;
+
+            ctx.beginPath();
+            /* start drawing the shape from the first coordinate in the array */
+            ctx.moveTo(this.activeShape[0].x, this.activeShape[0].y);
+
+            /* go through the array in in sequential order, drawing a line between each point */
+            for (var i = 0; i < this.activeShape.length; i++) {
+                ctx.lineTo(this.activeShape[i].x, this.activeShape[i].y);
+            }
+
+            ctx.fill();
+            ctx.stroke();
+
+            /* close off the path, by drawing a line between the first and last  */
+            ctx.closePath();
+        }
+
+    };
+
+    /**
+     * Draw the all the shapes in the savedShapes array.
+     *
+     * @return void
+     */
+    Smudge.prototype.drawSavedShapes = function(ctx, canvasIndex) {
+        /* clear the canvas each time */
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+        ctx.fillStyle = 'rgba(0, 100, 0, 0.6)';
+        ctx.strokeStyle = 'rgba(0, 100, 0, 0.6)';
+        ctx.lineWidth = 2;
+
+        this.shapes[canvasIndex].forEach(function(shape) {
+
+            ctx.beginPath();
+            /* start drawing the shape from the first coordinate in the array */
+            ctx.moveTo(shape.coords[0].x, shape.coords[0].y);
+
+            /* go through the array in in sequential order, drawing a line between each point */
+            shape.coords.forEach(function(point) {
+                ctx.lineTo(point.x, point.y);
+            });
+
+            /* close off the path, by drawing a line between the first and last  */
+            ctx.closePath();
+
+            ctx.fill();
+            ctx.stroke();
+        });
+
+    };
+
+    /**
+     * Delete one shape, by removing the last array element.
+     * If no shapes are saved, empty the active shape.
+     *
+     * @return void
+     */
+    Smudge.prototype.undo = function() {
+        (smudge.activeShape.length > 0) ? smudge.activeShape = [] : smudge.shapes[smudge.lastModifiedCanvas].pop();
+
+        smudge.draw(drawingCtx, canvasIndex);
+        smudge.drawSavedShapes(savedCtx, canvasIndex);
+    };
+
+    /**
+     * Save the shape by putting all the points from the activeShape array into the savedShape array,
+     * and then emptying the activeShape array.
+     *
+     * @return void
+     */
+    function saveShape(e, drawingCtx, savedCtx, canvasIndex) {
+        /* only save the shape if we have atleast 3 points */
+        if (smudge.activeShape.length > 2) {
+            smudge.shapes[canvasIndex].push({
+                id: smudge.shapes[canvasIndex].length + 1,
+                coords: smudge.activeShape
+            });
+
+            /* update the last modified canvas to this one */
+            smudge.lastModifiedCanvas = canvasIndex;
+        }
+
+        /* remove the current shape now that it's saved */
+        smudge.activeShape = [];
+
+        /* call draw() to remove the active shape from the canvas */
+        smudge.draw(drawingCtx, canvasIndex);
+        smudge.drawSavedShapes(savedCtx, canvasIndex);
+    }
+
+
+    var bootstrapCanvas = function(canvasIndex, element, settings, smudge) {
 
         /* establish our default settings, override if any provided */
-        var settings = extendDefaults({
-            imageUrl: this.getAttribute('data-image-url'),
-            borderColor: 'rgb(255, 255, 255)',
-            fillColor: 'rgba(0, 0, 0, 0.3)',
-            annotation: false
-        }, options);
+        settings = extendDefaults({
+            imageUrl: this.getAttribute('data-image-url')
+        }, settings);
 
         /* create the canvas where the drawing will take place */
         var drawingCanvas = document.createElement('canvas');
@@ -38,7 +151,7 @@
         var canvasContainer = element;
 
         /* here we will store the coordinates of the shape currently being drawn */
-        var activeShape = [];
+        // var activeShape = [];
         /* here we will store any annotations the user adds to the finished shapes */
         var annotations = [];
 
@@ -102,7 +215,7 @@
         function stopDraw(e) {
             this.removeEventListener('mousemove', checkDistance);
             /* we're done drawing, save the shape */
-            saveShape(e);
+            saveShape(e, drawingCtx, savedCtx, canvasIndex);
         }
 
         /**
@@ -118,9 +231,9 @@
             var x = e.offsetX;
             var y = e.offsetY;
 
-            for (var i = 0; i < activeShape.length; i++) {
+            for (var i = 0; i < smudge.activeShape.length; i++) {
                 distance = Math.sqrt(
-                    Math.pow(x - activeShape[i].x, 2) + Math.pow(y - activeShape[i].y, 2)
+                    Math.pow(x - smudge.activeShape[i].x, 2) + Math.pow(y - smudge.activeShape[i].y, 2)
                 );
 
                 if (distance < 6) {
@@ -131,76 +244,11 @@
 
             /* the new coordinate is atleast 6 pixels away from the previous one,
              * we can save the coordinate and draw the shape again */
-            activeShape.push({ x: Math.round(x), y: Math.round(y) });
-            draw();
+            smudge.activeShape.push({ x: Math.round(x), y: Math.round(y) });
+
+            smudge.draw(drawingCtx, canvasIndex);
         }
 
-        /**
-         * Takes the values from the activeShape array,
-         * and draws a line between each point.
-         * This function is called from the checkDistance function.
-         *
-         * @return void
-         */
-        function draw() {
-            /* clear the canvas each time */
-            drawingCtx.clearRect(0, 0, drawingCtx.canvas.width, drawingCtx.canvas.height);
-
-            /* do not draw before we have atleast two points to draw a line between */
-            if (activeShape.length > 1) {
-                drawingCtx.fillStyle = settings.fillColor;
-                drawingCtx.strokeStyle = settings.borderColor;
-                drawingCtx.lineWidth = 2;
-
-                drawingCtx.beginPath();
-                /* start drawing the shape from the first coordinate in the array */
-                drawingCtx.moveTo(activeShape[0].x, activeShape[0].y);
-
-                /* go through the array in in sequential order, drawing a line between each point */
-                for (var i = 0; i < activeShape.length; i++) {
-                    drawingCtx.lineTo(activeShape[i].x, activeShape[i].y);
-                }
-
-                drawingCtx.fill();
-                drawingCtx.stroke();
-
-                /* close off the path, by drawing a line between the first and last  */
-                drawingCtx.closePath();
-            }
-        }
-
-        /**
-         * Draw the all the shapes in the savedShapes array.
-         *
-         * @return void
-         */
-         function drawSavedShapes() {
-            /* clear the canvas each time */
-            savedCtx.clearRect(0, 0, savedCtx.canvas.width, savedCtx.canvas.height);
-
-            savedCtx.fillStyle = 'rgba(0, 100, 0, 0.6)';
-            savedCtx.strokeStyle = 'rgba(0, 100, 0, 0.6)';
-            savedCtx.lineWidth = 2;
-
-            smudge.shapes[canvasIndex].forEach(function(shape) {
-
-                savedCtx.beginPath();
-                /* start drawing the shape from the first coordinate in the array */
-                savedCtx.moveTo(shape.coords[0].x, shape.coords[0].y);
-
-                /* go through the array in in sequential order, drawing a line between each point */
-                shape.coords.forEach(function(point) {
-                    savedCtx.lineTo(point.x, point.y);
-                });
-
-                /* close off the path, by drawing a line between the first and last  */
-                savedCtx.closePath();
-
-                savedCtx.fill();
-                savedCtx.stroke();
-            });
-
-        }
 
         /**
          * Whenever a double click event takes place on the canvas this function
@@ -255,6 +303,8 @@
             var inputModal = new AnnotationModal({
                 /* display the text in the input field, if the selected shape already has a annotation saved */
                 inputValue: ( (text != '') ? text : '' ),
+                /* placholder="" attribute text of the input field */
+                placeholderText: settings.placeholderText,
                 /* save the annotation whenever the modal closes */
                 onClose: function(event) {
                     saveAnnotation(id, inputModal.getInputValue());
@@ -274,7 +324,7 @@
          * @return void
          */
         function saveAnnotation(id, text) {
-
+            /*  */
             smudge.shapes[canvasIndex].forEach(function(shape) {
                 /*  */
                 if (shape.id == id) {
@@ -300,76 +350,20 @@
         }
 
         /**
-         * Save the shape by putting all the points from the activeShape array into the savedShape array,
-         * and then emptying the activeShape array.
-         *
-         * @return void
-         */
-        function saveShape(e) {
-            /* only save the shape if we have atleast 3 points */
-            if (activeShape.length > 2) {
-                smudge.shapes[canvasIndex].push({
-                    id: smudge.shapes[canvasIndex].length + 1,
-                    coords: activeShape
-                });
-            }
-
-            /* remove the current shape now that it's saved */
-            activeShape = [];
-
-            /* call draw() to remove the active shape from the canvas */
-            draw();
-            drawSavedShapes();
-        }
-
-        /**
-         * Delete one shape, by removing the last array element.
-         * If no shapes are saved, empty the active shape.
-         *
-         * @return void
-         */
-        function undo() {
-            (activeShape.length > 0) ? activeShape = [] : smudge.shapes[canvasIndex].pop();
-
-            draw();
-            drawSavedShapes();
-        }
-
-        /**
          * Delete the active shape and all saved shapes,
          * and redraw the canvases.
          *
          * @return void
          */
         function reset() {
-            activeShape = [];
+            smudge.activeShape = [];
             smudge.shapes[canvasIndex] = [];
 
-            draw();
-            drawSavedShapes();
+            smudge.draw(drawingCtx, canvasIndex);
+            smudge.drawSavedShapes(savedCtx, canvasIndex);
         }
 
-    } /* end of initSmudge function */
-
-    /* Extend defaults with user options. */
-    function extendDefaults(source, properties) {
-        var property;
-        for (property in properties) {
-            if (properties.hasOwnProperty(property)) {
-                source[property] = properties[property];
-            }
-        }
-        return source;
-    }
-
-    /* forEach method for iterating thorugh NodeLists.
-     * Such as the one returned from querySelectorAll */
-    function forEach(array, callback, scope) {
-        for (var i = 0; i < array.length; i++) {
-            /* passes back stuff we need */
-            callback.call(scope, i, array[i]);
-        }
-    }
+    } /* end of bootstrapCanvas function */
 
 })();
 
@@ -394,6 +388,7 @@
             className: 'fade-and-drop',
             content: '',
             inputValue: '',
+            placeholderText: '',
             maxWidth: 400,
             minWidth: 280
         }
@@ -410,17 +405,6 @@
             /* merge the two objects using a privately scoped utility method called extendDefaults */
             this.options = extendDefaults(defaults, arguments[0]);
         }
-    }
-
-    /* Extend defaults with user options. */
-    function extendDefaults(source, properties) {
-        var property;
-        for (property in properties) {
-            if (properties.hasOwnProperty(property)) {
-                source[property] = properties[property];
-            }
-        }
-        return source;
     }
 
 
@@ -529,7 +513,7 @@
         /* Create form input */
         this.annotationInput = document.createElement("input");
         this.annotationInput.setAttribute("type", "text");
-        this.annotationInput.setAttribute("placeholder", "What do you see?");
+        this.annotationInput.setAttribute("placeholder", this.options.placeholderText);
         this.annotationInput.value = this.options.inputValue;
         this.annotationInput.className = 'annotation-modal-input';
 
@@ -583,3 +567,24 @@
     }
 
 }());
+
+
+/* Extend defaults with user options. */
+function extendDefaults(source, properties) {
+    var property;
+    for (property in properties) {
+        if (properties.hasOwnProperty(property)) {
+            source[property] = properties[property];
+        }
+    }
+    return source;
+}
+
+/* forEach method for iterating thorugh NodeLists.
+ * Such as the one returned from querySelectorAll */
+function forEach(array, callback, scope) {
+    for (var i = 0; i < array.length; i++) {
+        /* passes back stuff we need */
+        callback.call(scope, i, array[i]);
+    }
+}

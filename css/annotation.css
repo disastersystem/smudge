@@ -10,10 +10,7 @@
     height: 100%;
 
     -webkit-transition: 1ms opacity ease;
-       -moz-transition: 1ms opacity ease;
-        -ms-transition: 1ms opacity ease;
-         -o-transition: 1ms opacity ease;
-            transition: 1ms opacity ease;
+    transition: 1ms opacity ease;
 
     background: rgba(0, 0, 0, .6);
 }
@@ -30,20 +27,10 @@
     padding: 24px 20px;
 
     -webkit-transition: 1ms opacity ease;
-       -moz-transition: 1ms opacity ease;
-        -ms-transition: 1ms opacity ease;
-         -o-transition: 1ms opacity ease;
-            transition: 1ms opacity ease;
+    transition: 1ms opacity ease;
 
     -webkit-transform: translate(-50%, -50%);
-       -moz-transform: translate(-50%, -50%);
-        -ms-transform: translate(-50%, -50%);
-         -o-transform: translate(-50%, -50%);
-            transform: translate(-50%, -50%);
-
-    /* gross fix for blurry element when using transform translate in chrome */
-    -webkit-filter: blur(0.000001px);
-    -webkit-font-smoothing: antialiased;
+    transform: translate(-50%, -50%);
 
     border-radius: 2px;
     background: #fff;
@@ -74,15 +61,7 @@
     top: 20px;
 
     -webkit-transform: translate(-50%, 0);
-       -moz-transform: translate(-50%, 0);
-        -ms-transform: translate(-50%, 0);
-         -o-transform: translate(-50%, 0);
-            transform: translate(-50%, 0);
-
-
-    /* gross fix for blurry element when using transform translate in chrome */
-    -webkit-filter: blur(0.000001px);
-    -webkit-font-smoothing: antialiased;
+    transform: translate(-50%, 0);
 }
 
 .annotation-modal.annotation-modal-open {
@@ -112,44 +91,29 @@
     top: 100px;
 
     -webkit-transition: 200ms top 200ms ease;
-       -moz-transition: 200ms top 200ms ease;
-        -ms-transition: 200ms top 200ms ease;
-         -o-transition: 200ms top 200ms ease;
-            transition: 200ms top 200ms ease;
+    transition: 200ms top 200ms ease;
 }
 
 .annotation-modal.fade-and-drop.annotation-modal-open.annotation-modal-anchored {
     -webkit-transition: 500ms top 500ms ease;
-       -moz-transition: 500ms top 500ms ease;
-        -ms-transition: 500ms top 500ms ease;
-         -o-transition: 500ms top 500ms ease;
-            transition: 500ms top 500ms ease;
+    transition: 500ms top 500ms ease;
 }
 
 .annotation-modal-overlay.fade-and-drop.annotation-modal-open {
     top: 0;
 
     -webkit-transition: 200ms opacity ease;
-       -moz-transition: 200ms opacity ease;
-        -ms-transition: 200ms opacity ease;
-         -o-transition: 200ms opacity ease;
-            transition: 200ms opacity ease;
+    transition: 200ms opacity ease;
 
     opacity: 1;
 }
 
 .annotation-modal.fade-and-drop {
     -webkit-transition: 500ms top ease;
-       -moz-transition: 500ms top ease;
-        -ms-transition: 500ms top ease;
-         -o-transition: 500ms top ease;
-            transition: 500ms top ease;
+    transition: 500ms top ease;
 }
 
 .annotation-modal-overlay.fade-and-drop {
     -webkit-transition: 500ms opacity 500ms ease;
-       -moz-transition: 500ms opacity 500ms ease;
-        -ms-transition: 500ms opacity 500ms ease;
-         -o-transition: 500ms opacity 500ms ease;
-            transition: 500ms opacity 500ms ease;
+    transition: 500ms opacity 500ms ease;
 }
